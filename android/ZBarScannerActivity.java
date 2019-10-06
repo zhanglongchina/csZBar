@@ -44,7 +44,6 @@ import net.sourceforge.zbar.Symbol;
 import net.sourceforge.zbar.SymbolSet;
 import net.sourceforge.zbar.Config;
 
-import io.ionic.zbar.R;
 
 public class ZBarScannerActivity extends Activity
         implements SurfaceHolder.Callback {
@@ -167,7 +166,7 @@ public class ZBarScannerActivity extends Activity
         TextView view_textInstructions = (TextView) findViewById(getResourceId("id/csZbarScannerInstructions"));
         view_textTitle.setText(textTitle);
         view_textInstructions.setText(textInstructions);
-        mScanCropView = (ImageView) findViewById(R.id.csZbarScanCropView);
+        mScanCropView = (ImageView)findViewById(getResourceId("id/csZbarScanCropView"));
         // Draw/hide the sight
         if (!drawSight) {
             findViewById(getResourceId("id/csZbarScannerSight")).setVisibility(View.INVISIBLE);
@@ -428,7 +427,7 @@ public class ZBarScannerActivity extends Activity
                     // 停止识别
                     ZBar.CONTINUE_SCAN = false;
                     // 震动并播放声音
-                    SoundPoolUtils.getInstance(ZBarScannerActivity.this).startVideoAndVibrator(R.raw.timerbeep, 200);
+                  SoundPoolUtils.getInstance(ZBarScannerActivity.this).startVideoAndVibrator(getResourceId("raw/timerbeep"), 200);
                     String qrValue = "";
                     SymbolSet syms = scanner.getResults();
                     for (Symbol sym : syms) {
