@@ -11,6 +11,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
@@ -27,10 +29,11 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.content.pm.PackageManager;
 import android.view.Surface;
-
+import android.widget.Toast;
 
 import java.util.Collection;
 import java.util.Date;
@@ -40,6 +43,8 @@ import net.sourceforge.zbar.Image;
 import net.sourceforge.zbar.Symbol;
 import net.sourceforge.zbar.SymbolSet;
 import net.sourceforge.zbar.Config;
+
+import io.ionic.zbar.R;
 
 public class ZBarScannerActivity extends Activity
         implements SurfaceHolder.Callback {
@@ -76,6 +81,8 @@ public class ZBarScannerActivity extends Activity
     private String package_name;
     private Resources resources;
 
+    private ImageView mScanCropView;
+
     // Static initialisers (class) -------------------------------------
 
     static {
@@ -87,7 +94,6 @@ public class ZBarScannerActivity extends Activity
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
 
         int permissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.CAMERA);
 
@@ -102,8 +108,6 @@ public class ZBarScannerActivity extends Activity
                     CAMERA_PERMISSION_REQUEST);
         }
         super.onCreate(savedInstanceState);
-
-
     }
 
     public void onRequestPermissionsResult(int requestCode,
@@ -163,7 +167,7 @@ public class ZBarScannerActivity extends Activity
         TextView view_textInstructions = (TextView) findViewById(getResourceId("id/csZbarScannerInstructions"));
         view_textTitle.setText(textTitle);
         view_textInstructions.setText(textInstructions);
-
+        mScanCropView = (ImageView) findViewById(R.id.csZbarScanCropView);
         // Draw/hide the sight
         if (!drawSight) {
             findViewById(getResourceId("id/csZbarScannerSight")).setVisibility(View.INVISIBLE);
@@ -267,6 +271,8 @@ public class ZBarScannerActivity extends Activity
     @Override
     public void onDestroy() {
         if (scanner != null) scanner.destroy();
+        SoundPoolUtils.getInstance(this).release();
+        ZBar.CONTINUE_SCAN = true;
         super.onDestroy();
     }
 
@@ -399,30 +405,49 @@ public class ZBarScannerActivity extends Activity
     // Receives frames from the camera and checks for barcodes.
     private PreviewCallback previewCb = new PreviewCallback() {
         public void onPreviewFrame(byte[] data, Camera camera) {
-            Log.d("onPreviewFrame " + new Date(), String.valueOf(data.length));
-            Camera.Parameters parameters = camera.getParameters();
-            Camera.Size size = parameters.getPreviewSize();
-
-            Image barcode = new Image(size.width, size.height, "Y800");
-            barcode.setData(data);
-
-            if (scanner.scanImage(barcode) != 0) {
-                String qrValue = "";
-
-                SymbolSet syms = scanner.getResults();
-                for (Symbol sym : syms) {
-                    qrValue = sym.getData();
-                    Log.d("识别出的二维码", qrValue);
-                    CordovaUtil.getInstance().getCallbackContext().success(qrValue);
-                    // Return 1st found QR code value to the calling Activity.
+            if (ZBar.CONTINUE_SCAN) {
+                Log.d("onPreviewFrame " + new Date(), String.valueOf(data.length));
+                Camera.Parameters parameters = camera.getParameters();
+                Camera.Size size = parameters.getPreviewSize();
+                Image barcode = new Image(size.width, size.height, "Y800");
+                barcode.setData(data);
+                try {
+                    /** 获取布局中扫描框的位置信息 */
+                    int[] location = new int[2];
+                    mScanCropView.getLocationInWindow(location);
+                    int cropLeft = location[0];
+                    int cropTop = location[1];
+                    int cropWidth = mScanCropView.getWidth();
+                    int cropHeight = mScanCropView.getHeight();
+                    /** 生成最终的截取的矩形 */
+                    barcode.setCrop(cropTop, cropLeft, cropWidth, cropHeight);
+                } catch (Exception e) {
+                    Log.e("获取布局中扫描框的位置信息", e.toString());
+                }
+                if (scanner.scanImage(barcode) != 0) {
+                    // 停止识别
+                    ZBar.CONTINUE_SCAN = false;
+                    // 震动并播放声音
+                    SoundPoolUtils.getInstance(ZBarScannerActivity.this).startVideoAndVibrator(R.raw.timerbeep, 200);
+                    String qrValue = "";
+                    SymbolSet syms = scanner.getResults();
+                    for (Symbol sym : syms) {
+                        qrValue = sym.getData();
+                        Log.d("识别出的二维码", qrValue);
+                        // Toast
+                        //Toast.makeText(ZBarScannerActivity.this, qrValue, //Toast.LENGTH_SHORT).show();
+                        // 发送回调消息
+                        CordovaUtil.getInstance().getCallbackContext().success(qrValue);
+                        // Return 1st found QR code value to the calling Activity.
 //                    Intent result = new Intent();
 //                    result.putExtra(EXTRA_QRVALUE, qrValue);
 //                    setResult(Activity.RESULT_OK, result);
 //                    finish();
+                    }
                 }
-
             }
         }
+
     };
 
     // Misc ------------------------------------------------------------
@@ -550,6 +575,14 @@ public class ZBarScannerActivity extends Activity
             } catch (IOException e) {
                 die("Could not start camera preview: " + e.getMessage());
             }
+        }
+    }
+
+    public Bitmap Bytes2Bimap(byte[] b) {
+        if (b.length != 0) {
+            return BitmapFactory.decodeByteArray(b, 0, b.length);
+        } else {
+            return null;
         }
     }
 }

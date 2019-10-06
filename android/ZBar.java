@@ -20,19 +20,21 @@ public class ZBar extends CordovaPlugin {
 
     private boolean isInProgress = false;
     private CallbackContext scanCallbackContext;
-
+    public static boolean CONTINUE_SCAN = true;
     // Plugin API ------------------------------------------------------
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext)
             throws JSONException {
         this.scanCallbackContext = callbackContext;
-        //把CallbackContext存到单例工具类
+        // 把CallbackContext存到单例工具类
         CordovaUtil.getInstance().setCallbackContext(callbackContext);
         if (action.equals("scan")) {
             if (isInProgress) {
                 // 连续扫描，不能中断
 //                callbackContext.error("A scan is already in progress!");
+                // 再次调用扫描，放行解析
+                CONTINUE_SCAN = true;
             } else {
                 isInProgress = true;
                 JSONObject params = args.optJSONObject(0);
