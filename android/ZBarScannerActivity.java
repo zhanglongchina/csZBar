@@ -49,7 +49,7 @@ public class ZBarScannerActivity extends Activity
 
     // Config ----------------------------------------------------------
 
-    private static int autoFocusInterval = 2000; // Interval between AFcallback and next AF attempt.
+    private static int autoFocusInterval = 1000; // Interval between AFcallback and next AF attempt.
 
     // Public Constants ------------------------------------------------
 
