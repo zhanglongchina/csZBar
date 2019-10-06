@@ -100,7 +100,7 @@ public class SoundPoolUtils {
         //  int load(FileDescriptor fd, long offset, long length, int priority)
 
         //  声音ID 加载音频资源,这里用的是第二种，第三个参数为priority，声音的优先级*API中指出，priority参数目前没有效果，建议设置为1。
-        int load = mSoundPool.load(mContext, resId, DEFAULT_PRIORITY);
+        final int load = mSoundPool.load(mContext, resId, DEFAULT_PRIORITY);
         //异步需要等待加载完成，音频才能播放成功
         mSoundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
