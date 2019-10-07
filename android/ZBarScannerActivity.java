@@ -432,6 +432,7 @@ public class ZBarScannerActivity extends Activity
                     String qrValue = "";
                     SymbolSet syms = scanner.getResults();
                     for (Symbol sym : syms) {
+                      if (sym.getType() == Symbol.QRCODE) {
                         qrValue = sym.getData();
                         Log.d("识别出的二维码", qrValue);
                         // Toast
@@ -441,6 +442,7 @@ public class ZBarScannerActivity extends Activity
                         if(!drawSight){
                           onBackPressed();
                         }
+                      }
                         // Return 1st found QR code value to the calling Activity.
 //                    Intent result = new Intent();
 //                    result.putExtra(EXTRA_QRVALUE, qrValue);
