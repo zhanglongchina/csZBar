@@ -81,6 +81,7 @@ public class ZBarScannerActivity extends Activity
     private Resources resources;
 
     private ImageView mScanCropView;
+    private Boolean drawSight;
 
     // Static initialisers (class) -------------------------------------
 
@@ -143,7 +144,7 @@ public class ZBarScannerActivity extends Activity
         }
         String textTitle = params.optString("text_title");
         String textInstructions = params.optString("text_instructions");
-        Boolean drawSight = params.optBoolean("drawSight", true);
+        this.drawSight = params.optBoolean("drawSight", true);
         whichCamera = params.optString("camera");
         flashMode = params.optString("flash");
 
@@ -437,6 +438,9 @@ public class ZBarScannerActivity extends Activity
                         //Toast.makeText(ZBarScannerActivity.this, qrValue, //Toast.LENGTH_SHORT).show();
                         // 发送回调消息
                         CordovaUtil.getInstance().getCallbackContext().success(qrValue);
+                        if(!drawSight){
+                          onBackPressed();
+                        }
                         // Return 1st found QR code value to the calling Activity.
 //                    Intent result = new Intent();
 //                    result.putExtra(EXTRA_QRVALUE, qrValue);
