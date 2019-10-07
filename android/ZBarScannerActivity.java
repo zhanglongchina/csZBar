@@ -425,15 +425,15 @@ public class ZBarScannerActivity extends Activity
                     Log.e("获取布局中扫描框的位置信息", e.toString());
                 }
                 if (scanner.scanImage(barcode) != 0) {
-                    // 停止识别
-                    ZBar.CONTINUE_SCAN = false;
-                    // 震动并播放声音
-                  SoundPoolUtils.getInstance(ZBarScannerActivity.this).startVideoAndVibrator(getResourceId("raw/timerbeep"), 200);
                     String qrValue = "";
-                    SymbolSet syms = scanner.getResults();
-                    for (Symbol sym : syms) {
-                      if (sym.getType() == Symbol.QRCODE) {
-                        qrValue = sym.getData();
+                  SymbolSet syms = scanner.getResults();
+                  for (Symbol sym : syms) {
+                    if (sym.getType() == Symbol.QRCODE) {
+                      // 停止识别
+                      ZBar.CONTINUE_SCAN = false;
+                      // 震动并播放声音
+                      SoundPoolUtils.getInstance(ZBarScannerActivity.this).startVideoAndVibrator(getResourceId("raw/timerbeep"), 200);
+                      qrValue = sym.getData();
                         Log.d("识别出的二维码", qrValue);
                         // Toast
                         //Toast.makeText(ZBarScannerActivity.this, qrValue, //Toast.LENGTH_SHORT).show();
